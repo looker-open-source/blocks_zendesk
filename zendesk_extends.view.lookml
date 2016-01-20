@@ -1,162 +1,11 @@
-- view: tickets
-  sql_table_name: zendesk._tickets
+- view: users
+  extends: _users
 
+
+- view: tickets
+  extends: _tickets
   fields:
 
-### DEFAULT FIELDS ###
-
-  - dimension: id
-    primary_key: true
-    type: int
-    sql: ${TABLE}.id
-
-  - dimension: assignee_id     ## a ticket can only be assigned to one assignee at a time
-    type: int                  ## assignees may be a group of agents (represented as one entity), or one specific agent
-    sql: ${TABLE}.assignee_id
-    
-#   - dimension: assignee_name        ## include only if your Zendesk application utilizes the assignee_name field
-#     sql: ${TABLE}.assignee_name
-
-  - dimension: brand_id      ## include only if your Zendesk application utilizes the brand field
-    type: int                ## only associated with Zendesk Enterprise Accounts
-    sql: ${TABLE}.brand_id
-
-  - dimension: bug
-    type: yesno
-    sql: ${TABLE}.bug
-
-  - dimension: call_tracking
-    sql: ${TABLE}.call_tracking
-
-  - dimension: channel     
-    sql: ${TABLE}.channel
-    
-## include below dimension only if your Zendesk application utilizes the collaborator field
-
-#   - dimension: collaborator_ids    ## a ticket may have a collaborator as well, either a single group or one specific agent
-#     type: int
-#     sql: ${TABLE}.collaborator_ids
-
-  - dimension_group: created
-    type: time
-    timeframes: [time, date, week, month]
-    sql: ${TABLE}.created_at
-
-  - dimension: customer_email
-    sql: ${TABLE}.customer_email
-
-  - dimension: description
-    sql: ${TABLE}.description
-
-  - dimension_group: due
-    type: time
-    timeframes: [time, date, week, month]
-    sql: ${TABLE}.due_at
-
-  - dimension: external_id
-    sql: ${TABLE}.external_id
-
-  - dimension: forum_topic_id
-    type: int
-    sql: ${TABLE}.forum_topic_id
-
-  - dimension: group_id
-    type: int
-    sql: ${TABLE}.group_id
-
-  - dimension: has_incidents
-    type: yesno
-    sql: ${TABLE}.has_incidents
-
-  - dimension: loan_id
-    sql: ${TABLE}.loan_id
-
-  - dimension: organization_id
-    type: int
-    sql: ${TABLE}.organization_id
-
-  - dimension: priority
-    sql: ${TABLE}.priority
-
-  - dimension: problem_id
-    type: int
-    sql: ${TABLE}.problem_id
-
-  - dimension: queues_
-    sql: ${TABLE}.queues_
-
-  - dimension: reason_for_inquiry
-    sql: ${TABLE}.reason_for_inquiry
-
-  - dimension: recipient
-    sql: ${TABLE}.recipient
-
-  - dimension: requester_email
-    description: the requester is the customer who initiated the ticket
-    sql: ${TABLE}.requester_email
-
-  - dimension: requester_id   
-    description: the requester is the customer who initiated the ticket
-    type: int
-    sql: ${TABLE}.requester_id
-
-  - dimension: requester_locale_id
-    type: int
-    sql: ${TABLE}.requester_locale_id
-
-  - dimension: requester_name
-    description: the requester is the customer who initiated the ticket
-    sql: ${TABLE}.requester_name
-    
-#   - dimension: satisfaction_rating
-#     type: number
-#     sql: ${TABLE}.satisfaction_rating
-#     value_format: '#,#00.00%'
-
-  - dimension: status
-    sql: ${TABLE}.status
-
-  - dimension: subject    ## depending on use, either this field or "via_channel" will represent the channel the ticket came through
-    sql: ${TABLE}.subject
-
-  - dimension: submitter_id     ## The submitter is always the first to comment on a ticket
-    description: a submitter is either a customer or an agent submitting on behalf of a customer
-    type: int                   
-    sql: ${TABLE}.submitter_id
-
-#   - dimension: tags    ## include only if your Zendesk application utilizes the tags feature
-#     description: an array of all tags applied to this ticket
-#     sql: ${TABLE}.tags
-
-  - dimension: ticket_form_id
-    type: int
-    sql: ${TABLE}.ticket_form_id
-
-  - dimension: type
-    sql: ${TABLE}.type
-
-  - dimension_group: updated
-    type: time
-    timeframes: [time, date, week, month]
-    sql: ${TABLE}.updated_at
-    
-#   - dimension: priority           ## include only if your Zendesk application utilizes the priority field
-#     sql: ${TABLE}.priority
-
-  - dimension: url
-    sql: ${TABLE}.url
-
-  - dimension: via_channel
-    sql: ${TABLE}.via_channel
-
-  - measure: count
-    type: count
-    drill_fields: [id, requester_name]
-    
-    
-    
-    
-    
 ############ TICKET ATTRIBUTES ###########
 
     
@@ -204,11 +53,6 @@
     type: count
     filters: 
         is_solved: 'Yes'
-        
-        
-        
-        
-        
         
 ############ TIME FIELDS ###########
 
@@ -438,5 +282,4 @@
 #     type: avg
 #     sql: ${satisfaction_rating}
 #     value_format: '#,#00.00%'
-    
-    
+      
