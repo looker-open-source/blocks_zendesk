@@ -130,7 +130,7 @@
 ## include below dimension only if your Zendesk application utilizes the collaborator field
 
 #   - dimension: collaborator_ids    ## a ticket may have a collaborator as well, either a single group or one specific agent
-#     type: int
+#     type: number    value_format_name: id
 #     sql: ${TABLE}.collaborator_ids
 
 #   - dimension: tags    ## include only if your Zendesk application utilizes the tags feature

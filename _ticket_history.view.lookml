@@ -4,7 +4,6 @@
 
   - dimension: id
     primary_key: true
-    type: number
     sql: ${TABLE}.id
 
   - dimension: new_value
@@ -37,4 +36,3 @@
   - measure: count
     type: count
     drill_fields: [id]
-

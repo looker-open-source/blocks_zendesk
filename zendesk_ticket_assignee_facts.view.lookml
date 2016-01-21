@@ -1,8 +1,8 @@
 - view: ticket_assignee_facts
   derived_table:
-    sql_trigger_value: CURRENT_DATE
-    sortkeys: [assignee_id]
-    distkey: assignee_id
+#     sql_trigger_value: CURRENT_DATE
+#     sortkeys: [assignee_id]
+#     distkey: assignee_id
     sql: |
         SELECT
           assignee_id
@@ -18,11 +18,11 @@
 
   - dimension: assignee_id
     primary_key: true
-    type: int
     sql: ${TABLE}.assignee_id
 
   - dimension: lifetime_tickets
-    type: int
+    type: number
+    value_format_name: id
     sql: ${TABLE}.lifetime_tickets
 
   - dimension_group: first_ticket
@@ -60,5 +60,3 @@
       - first_ticket_time
       - latest_ticket_time
       - avg_tickets_per_day
-
-

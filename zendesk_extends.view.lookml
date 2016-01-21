@@ -1,14 +1,45 @@
+- view: organizations
+  extends: _organizations
+
+- view: category
+  extends: _groups
+  
+- view: category_memberships
+  extends: _group_memberships
+  
 - view: users
   extends: _users
-
+  
+- view: ticket_history
+  extends: _ticket_history
+  fields:
+  
+  - dimension: number_of_agent_touches  ## The SQL in this dimensions should be updated to reflect whatever your business
+    type: number                        ## considers and "agent touch"
+    hidden: true
+    sql: |
+     CASE 
+     WHEN ${new_value} IN ('true','false','incident') THEN 1 
+     ELSE 0
+     END
+         
+  - measure: total_agent_touches
+    type: sum
+    sql: ${number_of_agent_touches}
+    
+  - measure: count_unique_tickets
+    type: count_distinct
+    sql: ${ticket_id}
+    
+    
+  - measure: average_agents_touches
+    type: avg
+    sql: ${number_of_agent_touches}  
 
 - view: tickets
   extends: _tickets
   fields:
 
-############ TICKET ATTRIBUTES ###########
-
-    
   - dimension: is_backlogged
     type: yesno
     sql: ${status} = 'pending'
@@ -37,22 +68,22 @@
   - measure: count_backlogged_tickets
     type: count
     filters: 
-        is_backlogged: 'Yes'
+      is_backlogged: 'Yes'
     
   - measure: count_new_tickets
     type: count
     filters: 
-        is_new: 'Yes'
+      is_new: 'Yes'
         
   - measure: count_open_tickets
     type: count
     filters: 
-        is_open: 'Yes'
+      is_open: 'Yes'
         
   - measure: count_solved_tickets
     type: count
     filters: 
-        is_solved: 'Yes'
+      is_solved: 'Yes'
         
 ############ TIME FIELDS ###########
 
@@ -78,16 +109,15 @@
     sql: ${TABLE}.created_at
 
 
-
-
-
-
-
 ############ CHAT FIELDS: INCLUDE ONLY IF YOUR ZENDESK APP UTILIZES CHAT ###########
 
 # Chat times are based off the 'description' column until Zopim's integration is updated. This is because
 # the timestamps Zopim uses are inconsistent w/r/t data structure and timezone conversions
 
+  - dimension: is_chat
+    type: yesno
+    sql: |
+      POSITION('Chat started on ' IN ${description}) > 0
           
   - dimension: chat_start_time_string 
     hidden: true                      
@@ -141,27 +171,27 @@
         ELSE ${chat_end_time_string}::timestamp
       END
 
-  - dimension: chat_length_seconds
-    type: int
+  - dimension: chat_duration_seconds
+    type: number
 #     hidden: true
     sql: DATEDIFF(second, ${chat_start_time}::timestamp, ${chat_end_time}::timestamp)
 
-  - dimension: chat_length_minutes
+  - dimension: chat_duration_minutes
     description: As accurate as possible to when the chat "ended" but can be thrown off if customers staying on between separate chats.
-    type: int
-    sql: ${chat_length_seconds}/60
+    type: number
+    sql: ${chat_duration_seconds}/60
 
-  - dimension: chat_length_minutes_tier
+  - dimension: chat_duration_minutes_tier
 #     hidden: true
     type: tier
     tiers: [0,5,10,20,40,60,80,100,120,140,160,180,200,300,400,500,600]
-    sql: ${chat_length_minutes}
+    sql: ${chat_duration_minutes}
  
      
   - dimension: first_reply_time_chat    ## Assumes working chat hours from 8am-6pm
     label : First Reply Time (Chat)
     description: Time to first reponse; assumes chat does not last longer than 2 days or chat becomes null
-    type: int                   ## does not account for chats lasting longer than 2 days
+    type: number                   ## does not account for chats lasting longer than 2 days
     sql: |
          CASE 
          WHEN ${via_channel} = 'chat' AND DATEDIFF(day, ${chat_start_time}::timestamp, ${chat_end_time}::timestamp) < 1 THEN DATEDIFF(minute, ${chat_start_time}::timestamp, ${chat_end_time}::timestamp)
@@ -173,7 +203,7 @@
   - dimension: first_reply_time_email    ## Assumes working  hours from 8am-6pm
     label : First Reply Time (Email)
     description: Time to first reponse; assumes lag not last longer than 2 days or chat becomes null
-    type: int                   ## does not account for chats lasting longer than 2 days
+    type: number                   ## does not account for chats lasting longer than 2 days
     sql: |
          CASE 
          WHEN ${via_channel} = 'email' AND DATEDIFF(day, ${created_date}::timestamp, ${updated_date}::timestamp) < 1 THEN DATEDIFF(minute, ${created_time}::timestamp, ${updated_time}::timestamp)
@@ -188,15 +218,15 @@
     tiers: [0,5,10,20,40,60,90,120,180,240,300,360,420]
     sql: ${first_reply_time_chat}
  
-  - measure: avg_chat_length_minutes
+  - measure: average_chat_duration_minutes
     description: As accurate as possible to when the chat "ended" but can be thrown off if customers staying on between separate chats.
     type: avg
-    sql: ${chat_length_minutes}
+    sql: ${chat_duration_minutes}
     
-  - measure: total_chat_length_minutes
+  - measure: total_chat_duration_minutes
     description: As accurate as possible to when the chat "ended" but can be thrown off if customers staying on between separate chats.
     type: sum
-    sql: ${chat_length_minutes} 
+    sql: ${chat_duration_minutes} 
     
   - measure: average_first_reply_time_chat
     label: Average First Reply Time Chat (Minutes)
@@ -209,12 +239,18 @@
     type: sum
     sql: ${first_reply_time_chat}
     
-    
-    
-    
-    
-    
-############ CHAT FIELDS: INCLUDE ONLY IF YOUR ZENDESK APP UTILIZES VOICE CAPABILITIES  ###########
+  - measure: count_chats
+    type: count
+    filters:
+      is_chat: yes
+      
+  - measure: count_non_chats
+    label: 'Count Non-Chats'
+    type: count
+    filters:
+      is_chat: 'No'
+
+############ VOICE FIELDS: INCLUDE ONLY IF YOUR ZENDESK APP UTILIZES VOICE CAPABILITIES  ###########
 
   - dimension: is_incoming_call
     type: yesno
@@ -263,11 +299,6 @@
     filters:
         is_abandoned: 'No'  
         weekend_call: 'No'
-    
-    
-    
-    
-    
     
     
 ### SATISFACTION FIELDS - TO BE INCLUDED ONLY IF YOUR ZENDESK APP UTILIZES SATISFACTION SCORING ###

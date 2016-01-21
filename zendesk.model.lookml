@@ -6,41 +6,36 @@
 
 
 - explore: tickets
-  conditionally_filter:
-#       created_date: 30 days      ## Add a conditional filter to set a default time period to display from the Explore view
-#       unless: created_date
+## Add a filter to set a default time period to display in the Explore Window - this will make the queries run faster
+#   always_filter:
+#     tickets.created_date: 30 days
   joins:
   
       - join: category
-        type: left_outer
         sql_on: ${tickets.group_id} = ${category.id}
         relationship: many_to_one
  
       - join: category_memberships
-        type: left_outer
-        sql_on: ${category_memberships.category_id} = ${category.id}
+        sql_on: ${category_memberships.group_id} = ${category.id}
         relationship: one_to_many
- 
-      - join: users
-        type: left_outer
-        sql_on: ${category_memberships.user_id} = ${users.id}
-        relationship: many_to_one
         
-#       - join: organizations        ## include only if an organization is brought in
-#         type: left_outer
-#         sql_on: ${tickets.organization_id} = ${organizations.id}
-#         relationship: many_to_one       
+      - join: organizations
+        sql_on: ${tickets.organization_id} = ${organizations.id}
+        relationship: many_to_one 
+        
+      - join: assignee
+        from: users
+        sql_on: ${tickets.assignee_id} = ${assignee.id}
+        relationship: many_to_one        
         
       - join: ticket_assignee_facts
-        type: left_outer
         sql_on: ${tickets.assignee_id} = ${ticket_assignee_facts.assignee_id}
         relationship: many_to_one
         
       - join: ticket_history
         view_label: 'Tickets'        ## a view_label parameter changes the name of the view in the Explore section
-        type: left_outer
         sql_on: ${ticket_history.ticket_id} = ${tickets.id}
-        relationship: one_to_many     ## using one_to_one to force a fanout on tickets
+        relationship: one_to_many     ## use one_to_one to force a fanout on tickets
         fields: [ticket_id, new_value, total_agent_touches]
         
         
@@ -48,7 +43,8 @@
   joins: 
   
       - join: tickets
-        type: left_outer
         sql_on: ${ticket_history.ticket_id} = ${tickets.id}
         relationship: many_to_one
+        
+- explore: ticket_history_audit
   
